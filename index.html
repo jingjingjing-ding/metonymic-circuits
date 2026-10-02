@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- TODO: once the repo name is final, replace https://jingjingjing-ding.github.io/metonymic-circuits/ below -->
+  <meta name="description"
+    content="We trace Transcoder circuits in CLIP and DINO Vision Transformers and find that abstract concepts (e.g., angry) are grounded through concrete, interpretable anchor concepts (e.g., fire, face, pink): metonymic circuits.">
+  <meta property="og:title" content="Metonymic Circuits for Abstract Concept Grounding in Vision Transformers" />
+  <meta property="og:description"
+    content="How do ViTs recognize abstract concepts like 'angry'? Through metonymic circuits: concrete anchors such as fire and face bridge visual signals to abstract meaning." />
+  <meta property="og:url" content="https://jingjingjing-ding.github.io/metonymic-circuits/" />
+  <meta property="og:image" content="https://jingjingjing-ding.github.io/metonymic-circuits/static/images/overview.png" />
+  <meta name="twitter:title" content="Metonymic Circuits for Abstract Concept Grounding in ViTs">
+  <meta name="twitter:description"
+    content="How do ViTs recognize abstract concepts like 'angry'? Through metonymic circuits: concrete anchors such as fire and face bridge visual signals to abstract meaning.">
+  <meta name="twitter:image" content="https://jingjingjing-ding.github.io/metonymic-circuits/static/images/overview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="keywords"
+    content="Vision Transformers, Mechanistic Interpretability, Transcoders, Circuit Tracing, Abstract Concepts, Metonymy, Grounding, CLIP">
+  <meta name="author" content="Jing Ding, Ziqiao Ma, Jiayuan Mao, Joyce Chai, Freda Shi">
+  <meta name="robots" content="index, follow">
+
+  <title>Metonymic Circuits</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script>
+    window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] } };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    .figure-block {
+      margin: 1.5rem auto 0.5rem;
+      text-align: center;
+    }
+
+    .figure-block img {
+      width: 100%;
+      height: auto;
+    }
+
+    .figure-block.is-narrow img {
+      max-width: 520px;
+    }
+
+    .figure-caption {
+      font-size: 0.95rem;
+      color: #555;
+      margin-top: 0.5rem;
+      text-align: left;
+    }
+
+    .stat-box {
+      text-align: center;
+      padding: 1rem 0.5rem;
+      border-radius: 10px;
+      background: #f5f5f5;
+      height: 100%;
+    }
+
+    .stat-box .stat-number {
+      font-family: 'Google Sans', sans-serif;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #e03e52;
+      line-height: 1.2;
+    }
+
+    .stat-box .stat-label {
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .finding {
+      border-left: 4px solid #e03e52;
+      padding: 0.6rem 1rem;
+      background: #fdf3f4;
+      margin: 1rem 0;
+    }
+
+    /* Grounding-type colors match the paper's figures */
+    .gt {
+      font-weight: bold;
+      padding: 0 0.3em;
+      border-radius: 4px;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .gt-p { background: #4f78a8; }
+    .gt-o { background: #e05a5f; }
+    .gt-a { background: #6fb3ac; }
+    .gt-t { background: #f0953b; }
+
+    .table-container table {
+      margin: 0 auto;
+    }
+
+    .table td,
+    .table th {
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .section h3.title {
+      margin-top: 2.5rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Title & authors -->
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">🔥 Metonymic Circuits for Abstract Concept Grounding in Vision
+              Transformers</h1>
+            <!-- TODO: confirm venue line -->
+            <h4 class="title is-size-4 publication-title" style="color: #e03e52;">EMNLP 2026</h4>
+
+            <div class="is-size-5 publication-authors">
+              <!-- TODO: double-check author homepage links -->
+              <span class="author-block">
+                <a href="https://jingding-ai.github.io" target="_blank">Jing Ding</a><sup>1,2*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://mars-tin.github.io" target="_blank">Ziqiao Ma</a><sup>1</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://jiayuanm.com" target="_blank">Jiayuan Mao</a><sup>3,4</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://web.eecs.umich.edu/~chaijy/" target="_blank">Joyce Chai</a><sup>1†</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://cs.uwaterloo.ca/~fhs/" target="_blank">Freda Shi</a><sup>2,5†</sup>
+              </span>
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><sup>1</sup>University of Michigan</span>&nbsp;
+              <span class="author-block"><sup>2</sup>Vector Institute</span>&nbsp;
+              <span class="author-block"><sup>3</sup>University of Pennsylvania</span>&nbsp;
+              <span class="author-block"><sup>4</sup>Amazon FAR</span>&nbsp;
+              <span class="author-block"><sup>5</sup>University of Waterloo</span>
+              <span class="eql-cntrb"><small><br><sup>*</sup>Work conducted in part during an internship at the Vector
+                  Institute &nbsp; <sup>†</sup>Equal advising</small></span>
+            </div>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="static/pdfs/metonymic-circuits.pdf" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+
+                <!-- TODO: fill in arXiv / code / data links (or delete the buttons you don't need) -->
+                <span class="link-block">
+                  <a href="#" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="ai ai-arxiv"></i></span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="#" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="#" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">🤗</span>
+                    <span>Dataset</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Teaser -->
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <h2 class="subtitle has-text-centered">
+          <strong>TL;DR:</strong> Vision Transformers recognize abstract concepts like <em>angry</em> through
+          <strong>metonymic circuits</strong>: concrete, interpretable anchors such as <em>fire</em>, <em>face</em>, and
+          <em>pink</em> bridge low-level visual signals to abstract meaning.
+        </h2>
+        <div class="figure-block">
+          <img src="static/images/overview.png"
+            alt="Left: the metonymic grounding hypothesis. Right: a traced ViT circuit where pink, face and fire features lead to the 'angry' logit.">
+          <p class="figure-caption">
+            <strong>Left:</strong> the metonymic grounding hypothesis: abstract concepts (e.g., “angry”) are grounded
+            via intermediate, more concrete visual concepts. <strong>Right:</strong> traced ViT circuits showing
+            perceptual and object-level features mediating the abstract prediction across layers.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Abstract -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              We study how Vision Transformers ground abstract concepts (e.g., <em>angry</em>) when training data
+              provide limited direct referential evidence. We hypothesize a <strong>metonymic grounding
+                mechanism</strong> in which abstract predictions are driven by concrete, interpretable anchor concepts
+              (e.g., <em>fire</em>) that bridge visual signals to abstract semantics. By applying Transcoders on CLIP
+              and DINO vision encoders, we recover intermediate features that can be associated with semantic labels
+              for more concrete concepts, and trace their contributions in circuits underlying abstract concept
+              recognition. Experiments on a carefully curated icon dataset reveal <strong>structured metonymic
+                circuits</strong>, in which perceptual primitives dominate early layers and object-like anchors precede
+              abstract targets. Images containing rendered text instead recruit a distinct perceptual-to-textual route.
+              Causal interventions further validate that metonymic intermediates are functionally involved in
+              grounding abstract concepts.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Motivation -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Why Metonymy?</h2>
+      <div class="columns is-vcentered">
+        <div class="column is-half">
+          <div class="content has-text-justified">
+            <p>
+              Look at the icon of a flaming, frowning face. Nothing in it literally <em>is</em> anger. It only shows
+              fire, a face, and pinkish colors. Yet we read it as <em>angry</em> without effort. Cognitive linguists
+              call this <strong>conceptual metonymy</strong>: a small set of salient cues evokes a broader conceptual
+              frame within the same domain.
+            </p>
+            <p>
+              Vision Transformers face a similar gap. Their training captions are heavily skewed toward concrete
+              words, so abstract terms get scarce direct supervision. Still, ViTs recognize abstract concepts well
+              above chance. We hypothesize that they bridge this gap the same way people do, by routing through
+              <strong>intermediate, concrete anchor concepts</strong>.
+            </p>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div class="figure-block">
+            <img src="static/images/concreteness.png"
+              alt="Word-frequency density in DataComp-1B captions rises sharply with lexical concreteness.">
+            <p class="figure-caption">
+              Word-frequency density in OpenCLIP training captions (DataComp-1B), stratified by lexical concreteness
+              (1 = abstract, 5 = concrete; Brysbaert et al., 2014). <em>angry</em> is rare, while its anchors
+              <em>pink</em>, <em>fire</em>, and <em>face</em> are frequent.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dataset -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">A Metonymic Icon Dataset</h2>
+      <div class="content has-text-justified">
+        <p>
+          Icons are a clean testbed for metonymy: they depict abstract concepts through stable, culturally
+          conventional proxies (e.g., <em>angry</em> via fire and an upset face) with minimal background clutter. We
+          select abstract concepts from the MRC Psycholinguistic Database with <strong>low concreteness</strong>
+          (&lt; 0.6) but <strong>high imageability</strong> (&gt; 0.4). For example, <em>chemistry</em> is abstract
+          but readily pictured with test tubes. We then collect icons for each concept from Flaticon.
+        </p>
+      </div>
+      <div class="columns is-mobile is-multiline is-centered">
+        <div class="column is-one-third-tablet is-half-mobile">
+          <div class="stat-box">
+            <div class="stat-number">1,355</div>
+            <div class="stat-label">abstract concepts</div>
+          </div>
+        </div>
+        <div class="column is-one-third-tablet is-half-mobile">
+          <div class="stat-box">
+            <div class="stat-number">269,610</div>
+            <div class="stat-label">icon images (~200 per concept)</div>
+          </div>
+        </div>
+        <div class="column is-one-third-tablet is-full-mobile">
+          <div class="stat-box">
+            <div class="stat-number">3</div>
+            <div class="stat-label">rendered-text subsets</div>
+          </div>
+        </div>
+      </div>
+      <div class="content has-text-justified">
+        <p>
+          Many icons contain rendered text, sometimes spelling the target label outright, which may let a model read
+          rather than see. We therefore split each concept's images into three subsets:
+        </p>
+        <ul>
+          <li><strong>Visual icon:</strong> no explicit text of the concept label.</li>
+          <li><strong>Visual text:</strong> mainly rendered text spelling the label, with minimal other visual
+            elements.</li>
+          <li><strong>Mix:</strong> the label's text together with other visual elements (e.g., “NEWS” with a
+            microphone and a globe).</li>
+        </ul>
+        <p>
+          Each image is annotated with the concrete concepts it contains and their <em>grounding type</em>:
+          <span class="gt gt-p">Perceptual</span> (colors, shapes), <span class="gt gt-o">Object</span>,
+          <span class="gt gt-a">Abstract</span>, or <span class="gt gt-t">Textual</span>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Method -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Tracing Metonymic Circuits</h2>
+      <div class="content has-text-justified">
+        <p>Our pipeline has three steps.</p>
+
+        <h4 class="title is-5">1. Transcoders</h4>
+        <p>
+          For each ViT layer we train a Transcoder: a sparse module that approximates the MLP's computation as a
+          sparse combination of learned features,
+          \( z_{TC}(x) = \phi_k(W_{enc}x + b_{enc}) \), \( TC(x) = W_{dec}^\top z_{TC}(x) + b_{dec} \),
+          trained to minimize \( \lVert \mathrm{MLP}(x) - TC(x) \rVert^2 \). Unlike SAE features, Transcoder
+          features are a drop-in replacement for the computation itself, so we can trace and intervene on them
+          directly.
+        </p>
+
+        <h4 class="title is-5">2. Circuit backtracing with MassFlow</h4>
+        <p>
+          Following Ameisen et al. (2025), the edge weight from feature \(s\) to feature \(t\) is
+          \( A_{s \to t} = a_s \cdot \partial a_t / \partial a_s \). Starting from the target logit, we trace all
+          positive-contribution edges backward to build a circuit DAG. To score node importance we introduce
+          <strong>MassFlow</strong>: we set \( MF(\text{logit}) = 1 \) and let each node pass its mass back to its
+          inputs in proportion to their edge weights. MassFlow measures how much credit flows through a node on its
+          way to the prediction.
+        </p>
+
+        <h4 class="title is-5">3. Node interpretation</h4>
+        <p>
+          We label each feature with concrete concepts in two steps. A <strong>static prior</strong> measures how
+          strongly a feature correlates (Spearman) with each annotated concept across reference images. A
+          <strong>dynamic gate</strong> then masks out concepts absent from the current image. This way a
+          polysemantic “red/circle” feature is read as <em>red</em> only when no circle is present.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Findings -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Findings</h2>
+      <div class="content has-text-justified">
+        <p>
+          We trace circuits in OpenCLIP ViT-B/32 and DINOv2-base on 100 concepts × 10 probe images for each subset.
+          CLIP ranks the correct concept top-1 for 74.3% of images and top-5 for 91.6%. We report CLIP results below;
+          DINO results are in the paper.
+        </p>
+      </div>
+
+      <!-- Node-level -->
+      <h3 class="title is-4">Credit concentrates early; higher-level types rise with depth</h3>
+      <div class="content has-text-justified">
+        <p>
+          MassFlow peaks at layers 0–1 and 4–5 and decays sharply after layer 6, so the high-contribution routes are
+          established early. <span class="gt gt-p">Perceptual</span> features dominate throughout, while
+          <span class="gt gt-o">Object</span>, <span class="gt gt-a">Abstract</span>, and
+          <span class="gt gt-t">Textual</span> features gradually gain share with depth. The shift is gradual
+          rather than a staircase. Human annotators agree with our automatic grounding-type labels in 84.6% of
+          cases (macro-F1 0.831).
+        </p>
+      </div>
+      <div class="figure-block is-narrow">
+        <img src="static/images/layer_massflow.png"
+          alt="Left: MassFlow summed per layer, peaking at layers 0-1 and 4-5. Right: grounding-type share per layer.">
+        <p class="figure-caption">
+          <strong>Left:</strong> layer-wise MassFlow. <strong>Right:</strong> grounding-type composition within each
+          layer.
+        </p>
+      </div>
+
+      <!-- Path-level: transitions -->
+      <h3 class="title is-4">Stable metonymic routes, and a separate route for reading text</h3>
+      <div class="content has-text-justified">
+        <p>
+          Clustering paths by how their grounding types evolve reveals recurring regimes. In
+          <strong>P-dominant</strong> paths, perceptual signals carry the prediction end to end. In
+          <strong>O-dominant</strong> paths, object-level anchors stay salient across layers. Images with rendered
+          text instead follow a <strong>P→T</strong> route from perceptual features to textual ones, which forms a
+          highly isolated cluster. CLIP <em>reads</em> rather than <em>sees</em> in these cases.
+        </p>
+      </div>
+      <div class="figure-block">
+        <img src="static/images/transition_paths.png"
+          alt="Example path clusters: P-dominant (friend), O-dominant (angel), and perceptual-to-textual (bang).">
+        <p class="figure-caption">
+          Path clusters grouped by grounding-type transitions, each with an example icon and an example metonymic
+          path. Percentages give the cluster's share of total MassFlow within its subset.
+        </p>
+      </div>
+
+      <!-- Path-level: alignment -->
+      <h3 class="title is-4">Alignment with the target is not monotonic</h3>
+      <div class="content has-text-justified">
+        <p>
+          Do nodes become more semantically similar to the target concept as computation approaches the logit? We
+          measure this with a calibrated BERTScore and cluster the trajectories by shape. Some paths
+          <strong>ascend</strong> steadily, but others are flat, peak early (<strong>inverted-U</strong>), or dip
+          before recovering (<strong>U-shaped</strong>). Paths that shift toward abstract or textual grounding show
+          stronger late-stage gains than perceptual or object-dominated paths.
+        </p>
+      </div>
+      <div class="figure-block">
+        <img src="static/images/alignment_paths.png"
+          alt="Example alignment trajectories: ascending (meeting), inverted-U (merry), U-shaped (sell).">
+        <p class="figure-caption">
+          Path clusters grouped by node–target alignment trajectories, with grounding-type composition along each
+          path.
+        </p>
+      </div>
+
+      <!-- Anchor-target validation -->
+      <h3 class="title is-4">The anchors really are metonymic</h3>
+      <div class="content has-text-justified">
+        <p>
+          Three annotators audited 300 high-MassFlow anchor→target links and 75 mismatched-target controls. Most real
+          links show an identifiable relation to their target, and nearly half are same-frame metonymy. Mismatched
+          controls rarely do.
+        </p>
+      </div>
+      <div class="columns is-mobile is-multiline is-centered">
+        <div class="column is-one-third-tablet is-full-mobile">
+          <div class="stat-box">
+            <div class="stat-number">45.6%</div>
+            <div class="stat-label">of real links are same-frame metonymic</div>
+          </div>
+        </div>
+        <div class="column is-one-third-tablet is-half-mobile">
+          <div class="stat-box">
+            <div class="stat-number">74.6%</div>
+            <div class="stat-label">of real links have a target-specific relation</div>
+          </div>
+        </div>
+        <div class="column is-one-third-tablet is-half-mobile">
+          <div class="stat-box">
+            <div class="stat-number" style="color: #888;">22.9%</div>
+            <div class="stat-label">of mismatched controls do</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Co-occurrence -->
+      <h3 class="title is-4">Not just caption co-occurrence</h3>
+      <div class="content has-text-justified">
+        <p>
+          If metonymic circuits simply mirrored training statistics, concepts with high circuit importance should be
+          the ones that co-occur most with the label in DataComp-1B captions. They are not: correlations with NPMI are
+          weak (\( r \approx 0.07 \)) and almost never survive FDR correction, at every sample size.
+        </p>
+      </div>
+      <div class="table-container">
+        <table class="table is-striped is-narrow is-hoverable">
+          <thead>
+            <tr>
+              <th>Setting</th>
+              <th>Mean Spearman \(r\)</th>
+              <th>Mean \(z\)</th>
+              <th>Unadj. \(p&lt;0.05\)</th>
+              <th>FDR \(q&lt;0.05\)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>100 concepts × 10 images</td>
+              <td>0.066</td>
+              <td>0.57</td>
+              <td>14.1%</td>
+              <td>0.0%</td>
+            </tr>
+            <tr>
+              <td>50 concepts × 20 images</td>
+              <td>0.073</td>
+              <td>0.68</td>
+              <td>13.6%</td>
+              <td>5.2%</td>
+            </tr>
+            <tr>
+              <td>33 concepts × 30 images</td>
+              <td>0.075</td>
+              <td>0.71</td>
+              <td>27.3%</td>
+              <td>3.0%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Intervention -->
+      <h3 class="title is-4">Metonymic paths are causally necessary</h3>
+      <div class="columns is-vcentered">
+        <div class="column is-half">
+          <div class="content has-text-justified">
+            <p>
+              We inject Gaussian noise into the highest-MassFlow paths and measure the change in the correct label's
+              negative log-likelihood. Damage grows monotonically with the MassFlow we intervene on. At
+              \(\sigma = 3\), hitting 50% of MassFlow raises \(\Delta\)NLL above 2, roughly a
+              <strong>sevenfold drop</strong> in the probability of the correct label. Random controls of matched size
+              have effects orders of magnitude smaller.
+            </p>
+            <p>
+              Conversely, keeping the recovered circuit plus only ~3–4% of other high-activation features nearly
+              restores the logit, while a size-matched random circuit cannot.
+            </p>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div class="figure-block">
+            <img src="static/images/intervention.png"
+              alt="Delta NLL rises with total intervened MassFlow for noise scales 1 to 4.">
+            <p class="figure-caption">Path interventions across four Gaussian noise scales.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Implications -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Why It Matters</h2>
+      <div class="content has-text-justified">
+        <p>
+          Icons compress complex intent into nonverbal cues, and they are everywhere in interfaces shared by humans
+          and AI agents. That compression is also an attack surface for misleading or adversarial iconography.
+          Metonymic circuits give an <strong>auditing tool</strong>: we can inspect which visual anchors a ViT relies
+          on, check them against human intent, and intervene when the model latches onto spurious cues.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BibTeX -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <!-- TODO: update with the official citation once available -->
+      <pre><code>@inproceedings{ding2026metonymic,
+  title={Metonymic Circuits for Abstract Concept Grounding in Vision Transformers},
+  author={Ding, Jing and Ma, Ziqiao and Mao, Jiayuan and Chai, Joyce and Shi, Freda},
+  booktitle={Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing},
+  year={2026}
+}</code></pre>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template"
+                target="_blank">Academic Project Page Template</a>, which was adopted from the <a
+                href="https://nerfies.github.io" target="_blank">Nerfies</a> project page. Icons in figures are from
+              <a href="https://www.flaticon.com" target="_blank">Flaticon</a>.
+              <br> This website is licensed under a <a rel="license"
+                href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative Commons
+                Attribution-ShareAlike 4.0 International License</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>
