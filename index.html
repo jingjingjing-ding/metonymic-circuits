@@ -12,11 +12,11 @@
   <meta property="og:description"
     content="How do ViTs recognize abstract concepts like 'angry'? Through metonymic circuits: concrete anchors such as fire and face bridge visual signals to abstract meaning." />
   <meta property="og:url" content="https://jingjingjing-ding.github.io/metonymic-circuits/" />
-  <meta property="og:image" content="https://jingjingjing-ding.github.io/metonymic-circuits/static/images/overview.png" />
+  <meta property="og:image" content="https://jingjingjing-ding.github.io/metonymic-circuits/static/images/main-merge.png" />
   <meta name="twitter:title" content="Metonymic Circuits for Abstract Concept Grounding in ViTs">
   <meta name="twitter:description"
     content="How do ViTs recognize abstract concepts like 'angry'? Through metonymic circuits: concrete anchors such as fire and face bridge visual signals to abstract meaning.">
-  <meta name="twitter:image" content="https://jingjingjing-ding.github.io/metonymic-circuits/static/images/overview.png">
+  <meta name="twitter:image" content="https://jingjingjing-ding.github.io/metonymic-circuits/static/images/main-merge.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="keywords"
     content="Vision Transformers, Mechanistic Interpretability, Transcoders, Circuit Tracing, Abstract Concepts, Metonymy, Grounding, CLIP">
@@ -210,7 +210,7 @@
           <em>pink</em> bridge low-level visual signals to abstract meaning.
         </h2>
         <div class="figure-block">
-          <img src="static/images/overview.png"
+          <img src="static/images/main-merge.png"
             alt="Left: the metonymic grounding hypothesis. Right: a traced ViT circuit where pink, face and fire features lead to the 'angry' logit.">
           <p class="figure-caption">
             <strong>Left:</strong> the metonymic grounding hypothesis: abstract concepts (e.g., “angry”) are grounded
@@ -271,7 +271,7 @@
         </div>
         <div class="column is-half">
           <div class="figure-block">
-            <img src="static/images/concreteness.png"
+            <img src="static/images/concreteness_density.png"
               alt="Word-frequency density in DataComp-1B captions rises sharply with lexical concreteness.">
             <p class="figure-caption">
               Word-frequency density in OpenCLIP training captions (DataComp-1B), stratified by lexical concreteness
@@ -400,9 +400,17 @@
           cases (macro-F1 0.831).
         </p>
       </div>
-      <div class="figure-block is-narrow">
-        <img src="static/images/layer_massflow.png"
-          alt="Left: MassFlow summed per layer, peaking at layers 0-1 and 4-5. Right: grounding-type share per layer.">
+      <div class="figure-block">
+        <div class="columns is-centered is-vcentered">
+          <div class="column is-5">
+            <img src="static/images/layer_mf_sum.png"
+              alt="MassFlow summed per layer, peaking at layers 0-1 and 4-5.">
+          </div>
+          <div class="column is-5">
+            <img src="static/images/layer_type_share_area.png"
+              alt="Grounding-type share per layer: perceptual dominates, object, text and abstract grow with depth.">
+          </div>
+        </div>
         <p class="figure-caption">
           <strong>Left:</strong> layer-wise MassFlow. <strong>Right:</strong> grounding-type composition within each
           layer.
@@ -421,7 +429,7 @@
         </p>
       </div>
       <div class="figure-block">
-        <img src="static/images/transition_paths.png"
+        <img src="static/images/lexicon.png"
           alt="Example path clusters: P-dominant (friend), O-dominant (angel), and perceptual-to-textual (bang).">
         <p class="figure-caption">
           Path clusters grouped by grounding-type transitions, each with an example icon and an example metonymic
@@ -441,7 +449,7 @@
         </p>
       </div>
       <div class="figure-block">
-        <img src="static/images/alignment_paths.png"
+        <img src="static/images/bertscore.png"
           alt="Example alignment trajectories: ascending (meeting), inverted-U (merry), U-shaped (sell).">
         <p class="figure-caption">
           Path clusters grouped by node–target alignment trajectories, with grounding-type composition along each
@@ -537,34 +545,101 @@
               <strong>sevenfold drop</strong> in the probability of the correct label. Random controls of matched size
               have effects orders of magnitude smaller.
             </p>
-            <p>
-              Conversely, keeping the recovered circuit plus only ~3–4% of other high-activation features nearly
-              restores the logit, while a size-matched random circuit cannot.
-            </p>
           </div>
         </div>
         <div class="column is-half">
           <div class="figure-block">
-            <img src="static/images/intervention.png"
+            <img src="static/images/merge_path_ablation_nll.png"
               alt="Delta NLL rises with total intervened MassFlow for noise scales 1 to 4.">
             <p class="figure-caption">Path interventions across four Gaussian noise scales.</p>
           </div>
         </div>
       </div>
+
+      <!-- Recovery -->
+      <h3 class="title is-4">The circuit is an irreplaceable backbone</h3>
+      <div class="content has-text-justified">
+        <p>
+          We keep only the circuit, ablate everything else, and then restore non-circuit features from the most to the
+          least activated. The circuit plus just <strong>~3–4%</strong> of top-activated outside features nearly
+          restores the logit (0.50 at 3% → 0.98 at 4%). A size-matched <strong>random circuit</strong> never
+          recovers, no matter how many outside features come back. Restoring outside features at random instead of by
+          activation needs almost the full set. The circuit alone is not sufficient, but it is the part that cannot
+          be replaced.
+        </p>
+      </div>
+      <div class="figure-block">
+        <div class="columns is-centered">
+          <div class="column is-half">
+            <img src="static/images/aggregated_retention_restore_logit_ratio_main.png"
+              alt="Real circuit recovers the logit with about 4% of top-activated outside features; a random circuit stays unrecoverable.">
+          </div>
+          <div class="column is-half">
+            <img src="static/images/aggregated_retention_restore_logit_ratio.png"
+              alt="Full 2x2 comparison: with random outside features the real circuit needs the full set to recover.">
+          </div>
+        </div>
+        <img src="static/images/aggregated_retention_restore_logit_ratio_legend_2x2.png" alt="Legend"
+          style="max-width: 640px;">
+        <p class="figure-caption">
+          Circuit recovery. <strong>Left:</strong> real vs. size-matched random circuit, restoring top-activated
+          non-circuit features. <strong>Right:</strong> the full 2 × 2 comparison. Aggregated over five seeds under
+          Gaussian-noise ablation at \(\sigma = 4\).
+        </p>
+      </div>
     </div>
   </section>
 
-  <!-- Implications -->
+  <!-- Agent safety -->
   <section class="section">
     <div class="container is-max-desktop">
-      <h2 class="title is-3 has-text-centered">Why It Matters</h2>
+      <h2 class="title is-3 has-text-centered">Application: Agent Safety</h2>
       <div class="content has-text-justified">
         <p>
-          Icons compress complex intent into nonverbal cues, and they are everywhere in interfaces shared by humans
-          and AI agents. That compression is also an attack surface for misleading or adversarial iconography.
-          Metonymic circuits give an <strong>auditing tool</strong>: we can inspect which visual anchors a ViT relies
-          on, check them against human intent, and intervene when the model latches onto spurious cues.
+          Icons compress complex intent into nonverbal cues, and they are everywhere in the interfaces that
+          computer-use agents operate from screenshots. That compression is also an attack surface: a misleading
+          icon can bias an agent toward a visually signaled option over the one the text actually supports. We probe
+          this with <strong>Qwen3-VL-8B-Thinking</strong> acting as a desktop agent that must decide where to click.
         </p>
+        <p>
+          <strong>Example: “Choose the most urgent action to take.”</strong> The issue list contains a security fix
+          (<em>Fix authentication vulnerability</em>), a docs update, and a code refactor. The red crosshair marks
+          where the agent clicked.
+        </p>
+      </div>
+
+      <div class="figure-block">
+        <p class="has-text-left"><strong>(a) Text only</strong> <span class="tag is-success is-light">correct</span>
+          The agent weighs update recency, then picks the vulnerability fix because of what the task says.</p>
+        <img src="static/images/priority_normal_text_only_order_changed_click.png"
+          alt="Text-only issue list; the agent clicks TASK-157, the authentication vulnerability fix.">
+      </div>
+      <div class="figure-block">
+        <p class="has-text-left"><strong>(b) Icons agree with the text</strong> <span
+            class="tag is-success is-light">correct</span> A red alarm sits on the vulnerability fix. The icon
+          reinforces the right choice.</p>
+        <img src="static/images/priority_normal_with_icon_click.png"
+          alt="Red alarm icon on the vulnerability fix; the agent clicks it.">
+      </div>
+      <div class="figure-block">
+        <p class="has-text-left"><strong>(c) Attack: icons conflict with the text</strong> <span
+            class="tag is-danger is-light">wrong</span> The red alarm is moved to <em>Refactor legacy code</em>. The
+          agent even notes that the vulnerability is a critical security issue, yet concludes “red is highest
+          priority” and clicks the refactor task.</p>
+        <img src="static/images/priority_attack_click.png" style="max-width: 760px;"
+          alt="Red alarm icon moved to the refactor task; the agent clicks the refactor task instead of the vulnerability fix.">
+      </div>
+
+      <div class="content has-text-justified" style="margin-top: 1.5rem;">
+        <p>
+          The same happens with a shopping task (“Choose the best deal”): adding a <em>BEST PRICE</em> badge to a
+          worse option makes the agent skip its unit-price calculation and click the badge.
+        </p>
+        <div class="finding">
+          Icon semantics can override task semantics. Metonymic circuits provide an <strong>auditing tool</strong>:
+          we can inspect which visual anchors a model relies on, check them against human intent, and intervene when
+          it latches onto spurious cues.
+        </div>
       </div>
     </div>
   </section>
