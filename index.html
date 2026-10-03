@@ -54,6 +54,18 @@
       max-width: 520px;
     }
 
+    .video-block {
+      margin-bottom: 2rem;
+    }
+
+    .video-block video {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+    }
+
     .figure-caption {
       font-size: 0.95rem;
       color: #555;
@@ -204,6 +216,12 @@
   <section class="hero teaser">
     <div class="container is-max-desktop">
       <div class="hero-body">
+        <div class="video-block">
+          <video controls preload="metadata" playsinline poster="static/images/video_poster.jpg">
+            <source src="static/videos/EMNLP_main_4969.mp4" type="video/mp4">
+            <track kind="captions" src="static/videos/EMNLP_main_4969.vtt" srclang="en" label="English">
+          </video>
+        </div>
         <h2 class="subtitle has-text-centered">
           <strong>TL;DR:</strong> Vision Transformers recognize abstract concepts like <em>angry</em> through
           <strong>metonymic circuits</strong>: concrete, interpretable anchors such as <em>fire</em>, <em>face</em>, and

@@ -1,0 +1,1099 @@
+WEBVTT
+
+00:00.240 --> 00:02.200
+Hello, and thanks for watching. In
+
+00:02.200 --> 00:03.919
+this presentation, we introduce our
+
+00:03.919 --> 00:05.960
+work metonymic circuits for
+
+00:05.960 --> 00:07.759
+abstract concept grounding in
+
+00:07.759 --> 00:10.160
+vision transformers. We investigate
+
+00:10.160 --> 00:12.360
+how vision transformers internally
+
+00:12.360 --> 00:14.440
+ground abstract concepts and
+
+00:14.440 --> 00:16.279
+whether they rely on more concrete
+
+00:16.279 --> 00:18.359
+visual concepts as intermediate
+
+00:18.359 --> 00:19.120
+anchors.
+
+00:19.902 --> 00:22.061
+Let me start with a question.
+
+00:22.061 --> 00:23.982
+Take a look at this icon.
+
+00:23.982 --> 00:25.902
+What do you think it means?
+
+00:25.902 --> 00:27.301
+You can probably all tell
+
+00:27.301 --> 00:29.222
+immediately. This represents
+
+00:29.222 --> 00:32.022
+something like angry. But here's
+
+00:32.022 --> 00:33.782
+the thing. There's nothing in the
+
+00:33.782 --> 00:37.222
+pixels that literally is angry.
+
+00:37.222 --> 00:40.181
+Angry is an abstract concept. You
+
+00:40.181 --> 00:42.021
+can't point to a pixel and say
+
+00:42.021 --> 00:43.662
+that's angry.
+
+00:43.662 --> 00:45.582
+What you actually see are these
+
+00:45.582 --> 00:48.261
+concrete visual cues, a pinkish
+
+00:48.261 --> 00:51.622
+color, an upset face and fire.
+
+00:51.622 --> 00:52.782
+These are all things you can
+
+00:52.782 --> 00:55.621
+directly point to in the image.
+
+00:55.621 --> 00:57.822
+And somehow you combine them to
+
+00:57.822 --> 01:01.182
+infer the abstract meaning angry.
+
+01:01.182 --> 01:02.941
+This corresponds to a concept in
+
+01:02.941 --> 01:04.621
+cognitive linguistics called
+
+01:04.621 --> 01:06.702
+metronomy. The idea that we
+
+01:06.702 --> 01:08.902
+understand abstract concepts through
+
+01:08.902 --> 01:10.742
+concrete proxies within the same
+
+01:10.742 --> 01:12.461
+conceptual domain.
+
+01:12.461 --> 01:14.742
+Fire doesn't mean anger, but it
+
+01:14.742 --> 01:16.542
+evokes anger through conventional
+
+01:16.542 --> 01:18.022
+association.
+
+01:18.022 --> 01:20.421
+So, our core hypothesis is
+
+01:20.421 --> 01:22.902
+The grounding of abstract concepts
+
+01:22.902 --> 01:24.262
+depends on the grounding of
+
+01:24.262 --> 01:26.742
+intermediate more concrete concepts.
+
+01:26.743 --> 01:28.823
+Now you have a hypothesis of how
+
+01:28.823 --> 01:30.702
+you know what it means.
+
+01:30.702 --> 01:32.463
+A natural question is, does a
+
+01:32.463 --> 01:34.423
+vision transformer do something
+
+01:34.423 --> 01:37.223
+similar? Inside the model, can we
+
+01:37.223 --> 01:40.342
+find some concepts like pink, face
+
+01:40.342 --> 01:41.703
+and emotion?
+
+01:41.744 --> 01:43.744
+The answer is yes. We can do
+
+01:43.744 --> 01:46.224
+this by building a circuit inside
+
+01:46.224 --> 01:48.063
+the model with each node
+
+01:48.063 --> 01:50.343
+representing some concepts. The
+
+01:50.343 --> 01:52.984
+tool we use here is Transcoder. A
+
+01:52.984 --> 01:54.343
+node in the circuit is a
+
+01:54.343 --> 01:55.904
+Transcoder feature.
+
+01:57.617 --> 01:59.496
+Let's see how it works. This is
+
+01:59.496 --> 02:01.857
+a normal MLP layer in CLIP. We
+
+02:01.857 --> 02:03.577
+add a Transcoder alongside the
+
+02:03.577 --> 02:06.896
+MLP. It takes the same MLP input,
+
+02:06.896 --> 02:08.377
+but it projects it into a much
+
+02:08.377 --> 02:11.136
+higher dimensional space, 64 times
+
+02:11.136 --> 02:13.297
+the MLP's dimensions.
+
+02:13.297 --> 02:15.097
+If you are familiar with SAE, the
+
+02:15.097 --> 02:16.776
+idea is the same.
+
+02:16.776 --> 02:18.577
+Spread the information across many
+
+02:18.577 --> 02:20.297
+more dimensions so that each
+
+02:20.297 --> 02:21.657
+dimension is sparse and
+
+02:21.657 --> 02:23.297
+interpretable.
+
+02:23.297 --> 02:25.097
+The architecture is straightforward.
+
+02:25.097 --> 02:27.337
+It has an encoder and a decoder.
+
+02:27.337 --> 02:29.896
+The MLP input X goes through the
+
+02:29.896 --> 02:32.297
+encoder matrix, then a relu
+
+02:32.297 --> 02:33.857
+activation.
+
+02:33.857 --> 02:35.617
+Here, we get a sparse activation
+
+02:35.617 --> 02:39.097
+vector A of SAE dimension.
+
+02:39.097 --> 02:40.697
+Each element of this vector is an
+
+02:40.697 --> 02:42.697
+activation value of a Transcoder
+
+02:42.697 --> 02:44.777
+feature. Intuitively, this
+
+02:44.777 --> 02:46.297
+represents how much a feature
+
+02:46.297 --> 02:48.617
+should be activated given this MLP
+
+02:48.617 --> 02:49.817
+input.
+
+02:49.817 --> 02:51.416
+Then the decoder matrix projects
+
+02:51.416 --> 02:53.017
+it back to the original dimension
+
+02:53.017 --> 02:54.977
+to produce the output.
+
+02:54.977 --> 02:56.896
+Intuitively, this represents what a
+
+02:56.896 --> 02:58.177
+feature should output to the
+
+02:58.177 --> 02:59.736
+residual stream.
+
+02:59.736 --> 03:01.697
+The training loss has two terms.
+
+03:01.697 --> 03:03.177
+The first is a reconstruction
+
+03:03.177 --> 03:04.816
+loss. We want the Transcoder
+
+03:04.816 --> 03:06.377
+output to be close to the actual
+
+03:06.377 --> 03:08.537
+MLP output. The second is a
+
+03:08.537 --> 03:09.937
+sparsity penalty on the
+
+03:09.937 --> 03:12.177
+activations. We want most features
+
+03:12.177 --> 03:13.657
+to be inactive for any given
+
+03:13.657 --> 03:14.417
+input.
+
+03:14.418 --> 03:16.498
+So, based on this architecture, we
+
+03:16.498 --> 03:19.378
+have two takeaways. Number one,
+
+03:19.378 --> 03:21.177
+due to the sparsity penalty and
+
+03:21.177 --> 03:23.738
+high dimensionality, each Transcoder
+
+03:23.738 --> 03:25.578
+feature is approximately
+
+03:25.578 --> 03:27.097
+mono-semicantic.
+
+03:27.097 --> 03:28.858
+This is a standard assumption in
+
+03:28.858 --> 03:30.858
+sparse dictionary learning.
+
+03:30.858 --> 03:33.617
+Number two, the encoder reads from
+
+03:33.617 --> 03:35.818
+the residual stream. It determines
+
+03:35.818 --> 03:37.498
+how strongly each feature should
+
+03:37.498 --> 03:40.058
+be activated by the current input.
+
+03:40.058 --> 03:41.537
+The decoder writes back to the
+
+03:41.537 --> 03:43.578
+residual stream. Once a feature is
+
+03:43.578 --> 03:45.777
+activated, Its decoder vector
+
+03:45.777 --> 03:47.538
+determines what information it
+
+03:47.538 --> 03:49.137
+contributes to downstream
+
+03:49.137 --> 03:50.178
+computation.
+
+03:50.936 --> 03:53.016
+After these two steps, here's the
+
+03:53.016 --> 03:54.696
+key insight. Under these
+
+03:54.696 --> 03:56.656
+approximations, the model becomes
+
+03:56.656 --> 03:59.096
+approximately linear and that means
+
+03:59.096 --> 04:01.096
+we can directly compute how any
+
+04:01.096 --> 04:03.336
+Transcoder feature influences any
+
+04:03.336 --> 04:06.376
+other feature or the final logit.
+
+04:06.376 --> 04:08.096
+Specifically, how a feature
+
+04:08.096 --> 04:09.816
+contributes to the final logit can
+
+04:09.816 --> 04:11.256
+be computed as the partial
+
+04:11.256 --> 04:13.055
+derivative of the logit with
+
+04:13.055 --> 04:14.856
+respect to the features activation
+
+04:14.856 --> 04:15.936
+value.
+
+04:15.936 --> 04:17.856
+Similarly, we can compute how a
+
+04:17.856 --> 04:19.576
+former feature contributes to a
+
+04:19.576 --> 04:20.975
+later feature.
+
+04:20.975 --> 04:22.455
+And importantly, this can be
+
+04:22.455 --> 04:25.256
+across non-adjacent layers.
+
+04:25.256 --> 04:27.015
+These attribution values become the
+
+04:27.015 --> 04:29.136
+edge weights in our circuit.
+
+04:29.136 --> 04:30.376
+So the final product is a
+
+04:30.376 --> 04:32.616
+directed acyclic graph from the
+
+04:32.616 --> 04:34.136
+embedding through Transcoder
+
+04:34.136 --> 04:35.975
+features across layers to the
+
+04:35.975 --> 04:38.335
+logit. Each edge is weighted by
+
+04:38.335 --> 04:39.656
+the attribution score.
+
+04:39.897 --> 04:41.537
+We now have a circuit with edge
+
+04:41.537 --> 04:43.056
+weights, but we need a way to
+
+04:43.056 --> 04:44.976
+measure how important each node is
+
+04:44.976 --> 04:47.137
+in the circuit. So, here we have
+
+04:47.137 --> 04:49.296
+a metric called mass flow. The
+
+04:49.296 --> 04:51.697
+idea is very intuitive. We started
+
+04:51.697 --> 04:53.376
+the log it and assign it a mass
+
+04:53.376 --> 04:55.496
+of one. Then we propagate this
+
+04:55.496 --> 04:57.297
+mass backward through the circuit,
+
+04:57.297 --> 04:59.217
+distributing it proportionally
+
+04:59.217 --> 05:01.016
+according to edge weights. For
+
+05:01.016 --> 05:02.776
+each node S, its mass flow is
+
+05:02.776 --> 05:04.696
+the sum over all its outgoing
+
+05:04.696 --> 05:07.016
+edges of the edge weight fraction
+
+05:07.016 --> 05:09.696
+times the target nodes mass flow.
+
+05:09.696 --> 05:10.856
+Higher mass flow means that the
+
+05:10.856 --> 05:12.896
+feature carries more credit toward
+
+05:12.896 --> 05:13.777
+the loget.
+
+05:14.299 --> 05:16.899
+Next, we assign human interpretable
+
+05:16.899 --> 05:19.739
+labels to the Transcoder features.
+
+05:19.739 --> 05:22.259
+For each abstract concept such as
+
+05:22.259 --> 05:24.539
+angry, we collect about 200
+
+05:24.539 --> 05:27.139
+reference images. GPT annotates
+
+05:27.139 --> 05:29.419
+which concrete concepts are present
+
+05:29.419 --> 05:31.899
+in each image, while we record
+
+05:31.899 --> 05:33.859
+the activation of each Transcoder
+
+05:33.859 --> 05:35.019
+feature.
+
+05:35.019 --> 05:36.619
+We then compute the sperming
+
+05:36.619 --> 05:38.818
+correlation between concept presence
+
+05:38.818 --> 05:40.779
+and feature activation across these
+
+05:40.779 --> 05:42.059
+images.
+
+05:42.059 --> 05:43.898
+The highest correlated words become
+
+05:43.898 --> 05:45.459
+the sem- anti-teak labels for that
+
+05:45.459 --> 05:46.698
+feature.
+
+05:46.698 --> 05:48.538
+We also group these labels into
+
+05:48.538 --> 05:51.059
+four grounding types, perceptual,
+
+05:51.059 --> 05:53.899
+object, abstract and textual, which
+
+05:53.899 --> 05:55.739
+we use later in our analysis.
+
+05:55.740 --> 05:59.820
+For the data, we selected 1,355
+
+05:59.820 --> 06:02.260
+abstract concepts from the MRC
+
+06:02.260 --> 06:04.740
+psychotechnical database. For each
+
+06:04.740 --> 06:07.060
+concept, we collected approximately
+
+06:07.060 --> 06:09.980
+200 icons from Flatcon and we
+
+06:09.980 --> 06:12.340
+split them into three subsets.
+
+06:12.340 --> 06:14.820
+Visual icon contains no text of
+
+06:14.820 --> 06:16.179
+the target label.
+
+06:16.179 --> 06:18.380
+Visual text is mainly rendered
+
+06:18.380 --> 06:20.900
+text spelling the label. Mix
+
+06:20.900 --> 06:22.820
+contains both text and visual
+
+06:22.820 --> 06:24.060
+elements.
+
+06:24.060 --> 06:26.580
+We have GPT annotate each image
+
+06:26.580 --> 06:28.420
+and give element words of four
+
+06:28.420 --> 06:29.860
+grounding types present in the
+
+06:29.860 --> 06:30.940
+image.
+
+06:30.940 --> 06:32.940
+The data is used in two ways.
+
+06:32.940 --> 06:34.619
+The reference set for the total
+
+06:34.619 --> 06:37.340
+of 200 images per concept is used
+
+06:37.340 --> 06:39.619
+in the GPT annotation and feature
+
+06:39.619 --> 06:41.180
+labeling pipeline.
+
+06:41.180 --> 06:43.380
+The probe set of 10 images is
+
+06:43.380 --> 06:45.180
+used for actual circuit discovery
+
+06:45.180 --> 06:46.140
+and tracing.
+
+06:46.421 --> 06:47.701
+We run the circuit tracing
+
+06:47.701 --> 06:51.500
+pipeline on OpenCLIP ViT-B/32 and
+
+06:51.500 --> 06:54.101
+DINOv2-base. For each of the
+
+06:54.101 --> 06:56.941
+three subsets, visual icon, mix
+
+06:56.941 --> 06:59.660
+and visual text, we use 1000
+
+06:59.660 --> 07:02.381
+images covering 100 concepts with
+
+07:02.381 --> 07:04.141
+10 images per concept.
+
+07:04.382 --> 07:06.301
+Here are the results. For brevity,
+
+07:06.301 --> 07:08.061
+we show only the CLIP results
+
+07:08.061 --> 07:10.142
+here. Let's start with node level
+
+07:10.142 --> 07:12.061
+results. How mass flow and
+
+07:12.061 --> 07:13.622
+grounding types are distributed
+
+07:13.622 --> 07:14.982
+across layers.
+
+07:14.983 --> 07:17.063
+The left figure shows mass flow
+
+07:17.063 --> 07:19.423
+aggregated by layer. Circuit flow
+
+07:19.423 --> 07:21.302
+is heavily concentrated in early
+
+07:21.302 --> 07:23.463
+to mid layers and drops sharply
+
+07:23.463 --> 07:25.702
+after layer six. So the model's
+
+07:25.702 --> 07:27.502
+high contribution computational
+
+07:27.502 --> 07:29.463
+roots are established in the first
+
+07:29.463 --> 07:31.022
+half of the network.
+
+07:31.022 --> 07:32.543
+The right plot breaks down each
+
+07:32.543 --> 07:34.022
+layer's mass flow by grounding
+
+07:34.022 --> 07:36.823
+type. perceptual features dominate.
+
+07:36.823 --> 07:38.903
+The share of object, abstract and
+
+07:38.903 --> 07:40.863
+textual features gradually grows
+
+07:40.863 --> 07:41.703
+with depth.
+
+07:41.704 --> 07:43.464
+The previous slide looked at
+
+07:43.464 --> 07:45.744
+individual nodes. Now let's zoom
+
+07:45.744 --> 07:47.664
+out to entire paths.
+
+07:47.664 --> 07:50.024
+A path are a chain of notes from
+
+07:50.024 --> 07:51.984
+embedding to logic. The question
+
+07:51.984 --> 07:54.263
+is, how does grounding type evolve
+
+07:54.263 --> 07:55.664
+a long a path?
+
+07:55.664 --> 07:57.463
+Is it always a clean progression
+
+07:57.463 --> 07:59.784
+from perceptual to object to
+
+07:59.784 --> 08:00.504
+abstract?
+
+08:00.505 --> 08:03.144
+The answer is no. We clustered all
+
+08:03.144 --> 08:04.625
+paths by their grounding type
+
+08:04.625 --> 08:06.665
+profiles and found several stable
+
+08:06.665 --> 08:08.625
+regimes. Here we show two
+
+08:08.625 --> 08:10.625
+representative examples.
+
+08:10.625 --> 08:12.465
+A first dominant cluster is P
+
+08:12.465 --> 08:14.385
+dominant. perceptual features
+
+08:14.385 --> 08:16.184
+dominate the entire path. For
+
+08:16.184 --> 08:17.905
+friend, every note along the way
+
+08:17.905 --> 08:19.624
+is about silhouettes, lines,
+
+08:19.624 --> 08:21.305
+shapes. Another one is a
+
+08:21.305 --> 08:24.185
+transition PDT. It mostly shows up
+
+08:24.185 --> 08:26.385
+in the visual text subset. For
+
+08:26.385 --> 08:27.825
+bang, the path goes from
+
+08:27.825 --> 08:29.944
+perceptual features like black and
+
+08:29.944 --> 08:32.024
+stroke. to textual features like
+
+08:32.024 --> 08:34.185
+font. This cluster reveals that
+
+08:34.185 --> 08:36.305
+CLIP uses a qualitatively different
+
+08:36.305 --> 08:37.865
+strategy when it encounters
+
+08:37.865 --> 08:40.145
+readable text. So, the key point
+
+08:40.145 --> 08:42.185
+is metonymic grounding is not a
+
+08:42.185 --> 08:44.345
+single fixed pipeline. Different
+
+08:44.345 --> 08:46.465
+concepts and different image types
+
+08:46.465 --> 08:47.785
+activate different grounding
+
+08:47.785 --> 08:48.745
+regimes.
+
+08:49.386 --> 08:51.386
+We also measured the semantic
+
+08:51.386 --> 08:53.105
+similarity between each node's
+
+08:53.105 --> 08:54.705
+concept labels and the target
+
+08:54.705 --> 08:56.745
+label using a calibrated variant
+
+08:56.745 --> 08:58.586
+of bird score and then cluster
+
+08:58.586 --> 08:59.866
+paths by the shape of these
+
+08:59.866 --> 09:01.426
+alignment curves.
+
+09:01.426 --> 09:03.105
+We found that from embedding node
+
+09:03.105 --> 09:04.905
+to loget, the semantic meaning is
+
+09:04.905 --> 09:07.386
+not always monotonically increasing.
+
+09:07.386 --> 09:08.866
+For example, we can see there are
+
+09:08.866 --> 09:10.626
+shapes like inverted U and
+
+09:10.626 --> 09:12.706
+descending curve. The bar charts
+
+09:12.706 --> 09:14.066
+below show the grounding type
+
+09:14.066 --> 09:16.585
+composition at each path position.
+
+09:16.585 --> 09:18.026
+The alignment shape correlates with
+
+09:18.026 --> 09:19.866
+the grounding type dynamics. For
+
+09:19.866 --> 09:21.706
+example, in the descending pattern,
+
+09:21.706 --> 09:23.426
+the path moves from abstract heavy
+
+09:23.426 --> 09:25.506
+early features to perceptual heavy
+
+09:25.506 --> 09:27.306
+later ones, which explains why
+
+09:27.306 --> 09:28.866
+semantic alignment drops.
+
+09:29.648 --> 09:31.328
+But are these circuits actually
+
+09:31.328 --> 09:33.688
+causal, rather than just correlated
+
+09:33.688 --> 09:35.568
+with the prediction? We test this
+
+09:35.568 --> 09:37.848
+with two interventions. On the
+
+09:37.848 --> 09:39.808
+left, we progressively ablate
+
+09:39.808 --> 09:41.367
+features along high mass flow
+
+09:41.367 --> 09:42.367
+paths.
+
+09:42.367 --> 09:43.648
+As we disrupt more of the
+
+09:43.648 --> 09:45.728
+circuit, prediction loss increases
+
+09:45.728 --> 09:47.528
+consistently, showing that these
+
+09:47.528 --> 09:49.408
+paths causally contribute to the
+
+09:49.408 --> 09:51.728
+output. On the right, we ask what
+
+09:51.728 --> 09:53.007
+is needed to recover the
+
+09:53.007 --> 09:55.007
+prediction. Removing the circuit
+
+09:55.007 --> 09:56.847
+cannot be compensated for by the
+
+09:56.847 --> 09:59.007
+remaining features, even when all
+
+09:59.007 --> 10:00.407
+of them are restored board.
+
+10:00.407 --> 10:02.207
+In contrast, when the circuit is
+
+10:02.207 --> 10:04.408
+preserved, adding back only about
+
+10:04.408 --> 10:06.568
+3 to 4% of the most active
+
+10:06.568 --> 10:08.448
+outside features is enough to
+
+10:08.448 --> 10:11.008
+recover nearly the full loget. So
+
+10:11.008 --> 10:12.727
+the circuit acts as a necessary
+
+10:12.727 --> 10:14.608
+backbone together with a small
+
+10:14.608 --> 10:16.128
+amount of distributed supporting
+
+10:16.128 --> 10:17.208
+activity.
+
+10:18.287 --> 10:20.208
+Finally, could these grounding
+
+10:20.208 --> 10:22.047
+patterns simply come from word
+
+10:22.047 --> 10:23.288
+co-occurrence in the training
+
+10:23.288 --> 10:24.608
+captions?
+
+10:24.608 --> 10:26.568
+To test this, we compare two
+
+10:26.568 --> 10:28.288
+quantities for each concrete
+
+10:28.288 --> 10:31.408
+concept. NPMI measures how strongly
+
+10:31.408 --> 10:33.328
+that concept co-occurs with the
+
+10:33.328 --> 10:34.848
+abstract label in the training
+
+10:34.848 --> 10:37.367
+text, while mass flow measures how
+
+10:37.367 --> 10:39.248
+important it is inside the model
+
+10:39.248 --> 10:40.527
+circuit.
+
+10:40.527 --> 10:41.928
+We then compute Spearman
+
+10:41.928 --> 10:43.408
+correlation between these two
+
+10:43.408 --> 10:44.648
+rankings.
+
+10:44.648 --> 10:45.968
+If the circuit were mainly
+
+10:45.968 --> 10:48.207
+reflecting textual co-occurrence,
+
+10:48.207 --> 10:50.367
+Concepts with high npmI should
+
+10:50.367 --> 10:52.568
+also have high mass flow.
+
+10:52.568 --> 10:54.528
+But the correlation is relatively
+
+10:54.528 --> 10:57.048
+weak. The mean spermen R is only
+
+10:57.048 --> 11:00.448
+around 0.07 across our settings.
+
+11:00.448 --> 11:02.167
+And after FDR correction for
+
+11:02.167 --> 11:04.368
+multiple comparisons, almost none
+
+11:04.368 --> 11:05.608
+of these correlations remain
+
+11:05.608 --> 11:07.008
+significant.
+
+11:07.008 --> 11:08.647
+So, the circuit structure cannot
+
+11:08.647 --> 11:10.088
+be explained by simple word
+
+11:10.088 --> 11:11.608
+co-current statistics in the
+
+11:11.608 --> 11:12.928
+training captions.
+
+11:14.329 --> 11:16.248
+Here is the conclusion.
+
+11:16.248 --> 11:18.008
+We proposed the metonymic grounding
+
+11:18.008 --> 11:20.729
+hypothesis that vision transformers
+
+11:20.729 --> 11:22.648
+ground abstract concepts through
+
+11:22.648 --> 11:25.009
+intermediate more concrete visual
+
+11:25.009 --> 11:26.569
+concepts.
+
+11:26.569 --> 11:27.969
+We developed a method using
+
+11:27.969 --> 11:30.049
+Transcoders and circuit tracing on
+
+11:30.049 --> 11:31.969
+vision encoder to recover
+
+11:31.969 --> 11:33.969
+interpretable computational circuits
+
+11:33.969 --> 11:36.649
+for abstract concept recognition.
+
+11:36.649 --> 11:39.329
+Our main findings, first structured
+
+11:39.329 --> 11:41.329
+metonymic circuits exist with
+
+11:41.329 --> 11:43.049
+perceptual primitives in early
+
+11:43.049 --> 11:44.288
+layers.
+
+11:44.288 --> 11:45.768
+Second, there are multiple
+
+11:45.768 --> 11:47.449
+grounding regimes.
+
+11:47.449 --> 11:49.249
+Third, circuit importance is
+
+11:49.249 --> 11:51.129
+decoupled from training caption
+
+11:51.129 --> 11:52.808
+co-occurrence.
+
+11:52.808 --> 11:54.449
+Finally, causal interventions
+
+11:54.449 --> 11:55.729
+confirmed these circuits are
+
+11:55.729 --> 11:57.808
+functionally necessary. Thanks for
+
+11:57.808 --> 11:58.449
+watching.
