@@ -5,7 +5,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- TODO: once the repo name is final, replace https://jingjingjing-ding.github.io/metonymic-circuits/ below -->
   <meta name="description"
     content="We trace Transcoder circuits in CLIP and DINO Vision Transformers and find that abstract concepts (e.g., angry) are grounded through concrete, interpretable anchor concepts (e.g., fire, face, pink): metonymic circuits.">
   <meta property="og:title" content="Metonymic Circuits for Abstract Concept Grounding in Vision Transformers" />
@@ -52,6 +51,11 @@
 
     .figure-block.is-narrow img {
       max-width: 520px;
+    }
+
+    .link-block .button[disabled] {
+      margin-top: 5px;
+      margin-bottom: 5px;
     }
 
     .video-block {
@@ -141,8 +145,7 @@
           <div class="column has-text-centered">
             <h1 class="title is-1 publication-title">🔥 Metonymic Circuits for Abstract Concept Grounding in Vision
               Transformers</h1>
-            <!-- TODO: confirm venue line -->
-            <h4 class="title is-size-4 publication-title" style="color: #e03e52;">EMNLP 2026</h4>
+            <h4 class="title is-size-4 publication-title" style="color: #e03e52;">EMNLP 2026 Main Conference</h4>
 
             <div class="is-size-5 publication-authors">
               <!-- TODO: double-check author homepage links -->
@@ -183,26 +186,28 @@
                   </a>
                 </span>
 
-                <!-- TODO: fill in arXiv / code / data links (or delete the buttons you don't need) -->
                 <span class="link-block">
-                  <a href="#" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                  <a href="https://arxiv.org/abs/2610.06928" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
                     <span class="icon"><i class="ai ai-arxiv"></i></span>
                     <span>arXiv</span>
                   </a>
                 </span>
 
+                <!-- TODO: when released, turn these back into links:
+                     <a href="URL" target="_blank" class="external-link button is-normal is-rounded is-dark"> -->
                 <span class="link-block">
-                  <a href="#" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                  <span class="button is-normal is-rounded is-dark" disabled title="Coming soon">
                     <span class="icon"><i class="fab fa-github"></i></span>
-                    <span>Code</span>
-                  </a>
+                    <span>Code (coming soon)</span>
+                  </span>
                 </span>
 
                 <span class="link-block">
-                  <a href="#" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                  <span class="button is-normal is-rounded is-dark" disabled title="Coming soon">
                     <span class="icon">🤗</span>
-                    <span>Dataset</span>
-                  </a>
+                    <span>Dataset (coming soon)</span>
+                  </span>
                 </span>
               </div>
             </div>
@@ -274,7 +279,7 @@
         <div class="column is-half">
           <div class="content has-text-justified">
             <p>
-              Look at the icon of a flaming, frowning face. Nothing in it literally <em>is</em> anger. It only shows
+              Look at the icon of a flaming, frowning face. It shows
               fire, a face, and pinkish colors. Yet we read it as <em>angry</em> without effort. Cognitive linguists
               call this <strong>conceptual metonymy</strong>: a small set of salient cues evokes a broader conceptual
               frame within the same domain.
@@ -326,12 +331,6 @@
           <div class="stat-box">
             <div class="stat-number">269,610</div>
             <div class="stat-label">icon images (~200 per concept)</div>
-          </div>
-        </div>
-        <div class="column is-one-third-tablet is-full-mobile">
-          <div class="stat-box">
-            <div class="stat-number">3</div>
-            <div class="stat-label">rendered-text subsets</div>
           </div>
         </div>
       </div>
@@ -470,8 +469,12 @@
         <img src="static/images/bertscore.png"
           alt="Example alignment trajectories: ascending (meeting), inverted-U (merry), U-shaped (sell).">
         <p class="figure-caption">
-          Path clusters grouped by node–target alignment trajectories, with grounding-type composition along each
-          path.
+          Examples of grounding paths grouped by node–abstract-concept alignment patterns. For each cluster, we show
+          (1) the characteristic alignment pattern (top) together with the grounding types of the same paths
+          (bottom); (2) an example icon image from the cluster; and (3) an example metonymic path, i.e., the sequence
+          of nodes leading to the target logit. Grounding types are color-coded as
+          <span class="gt gt-p">Perceptual</span>, <span class="gt gt-o">Object</span>,
+          <span class="gt gt-a">Abstract</span>, and <span class="gt gt-t">Textual</span>.
         </p>
       </div>
 
@@ -644,7 +647,7 @@
             class="tag is-danger is-light">wrong</span> The red alarm is moved to <em>Refactor legacy code</em>. The
           agent even notes that the vulnerability is a critical security issue, yet concludes “red is highest
           priority” and clicks the refactor task.</p>
-        <img src="static/images/priority_attack_click.png" style="max-width: 760px;"
+        <img src="static/images/priority_attack_click.png" 
           alt="Red alarm icon moved to the refactor task; the agent clicks the refactor task instead of the vulnerability fix.">
       </div>
 
@@ -666,12 +669,14 @@
   <section class="section" id="BibTeX">
     <div class="container is-max-desktop content">
       <h2 class="title">BibTeX</h2>
-      <!-- TODO: update with the official citation once available -->
-      <pre><code>@inproceedings{ding2026metonymic,
-  title={Metonymic Circuits for Abstract Concept Grounding in Vision Transformers},
-  author={Ding, Jing and Ma, Ziqiao and Mao, Jiayuan and Chai, Joyce and Shi, Freda},
-  booktitle={Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing},
-  year={2026}
+      <pre><code>@misc{ding2026metonymiccircuitsabstractconcept,
+      title={Metonymic Circuits for Abstract Concept Grounding in Vision Transformers},
+      author={Jing Ding and Ziqiao Ma and Jiayuan Mao and Joyce Chai and Freda Shi},
+      year={2026},
+      eprint={2610.06928},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2610.06928},
 }</code></pre>
     </div>
   </section>
